@@ -54,6 +54,8 @@ function fixElement(el)
     }
 }
 
-document.getElementsByTagName("a").forEach(el => fixElement(el)); //MutationObserver does not work on initial load. This will handle it, while the new loaded elements will go to MutationObserver
+let links = document.getElementsByTagName("a");
+for (let i = 0; i < links.length; ++i) 
+    fixElement(links[i]); //MutationObserver does not work on initial load. This will handle it, while the new loaded elements will go to MutationObserver
 const observer = new MutationObserver(callback);
 observer.observe(targetNode, config);
