@@ -9,29 +9,51 @@
 // ==/UserScript==
 
 const linkBeginning = "https://vk.com/away.php";
-const linkEnding = "&";
-let nextLinkId = 0;
-
-(setInterval( function() {
-    'use strict';
-
-    console.log("VK groomifier started");
-
-    if (document.title == "Мессенджер") document.title = "Сообщения";
+let debug = false;
+if (document.title == "Мессенджер") document.title = "Сообщения";
     document.querySelectorAll('.left_label, inl_bl').forEach(el => {
         if (el.innerHTML == "Мессенджер") el.innerHTML = "Сообщения";
     });
 
-    let links = document.getElementsByTagName("a");
-    console.log("Found ",links.length," links on the page");
-    for (let i = nextLinkId; i < links.length; ++i, ++nextLinkId)
+const targetNode = document.body;
+const config = { childList: true, subtree: true };
+function callback(mutationList, observer)
+{
+    for (z in mutationList)
     {
-        let href = links[i].href;
-        if (href.startsWith(linkBeginning))
+        if (mutationList[z].addedNodes)
+        for (let i = 0; i < mutationList[z].addedNodes.length; ++i)
         {
-            let url = new URL(href);
-            let searchParams = new URLSearchParams(url.search);
-            if (searchParams.has("to")) links[i].href = searchParams.get("to");
+            let el = mutationList[z].addedNodes[i];
+            recursivelyIterate(el);        
+        }
+    }    
+}
+
+function recursivelyIterate(el)
+{
+    if (debug) console.log(el);
+    if (el.nodeName == "A") fixElement(el);
+    if (el.children)
+        for (let i = 0; i < el.children.length; ++i) 
+            recursivelyIterate(el.children[i]);
+}
+
+function fixElement(el)
+{
+    let href = el.href;
+    if (href.startsWith(linkBeginning))
+    {
+        let url = new URL(href);
+        let searchParams = new URLSearchParams(url.search);
+        if (searchParams.has("to")) 
+        {
+            el.href = searchParams.get("to");
+            if (debug) el.style.background = "green";
         }
     }
-},500));
+}
+
+document.getElementsByTagName("a").forEach(el => fixElement(el)); //MutationObserver does not work on initial load. This will handle it, while the new loaded elements will go to MutationObserver
+const observer = new MutationObserver(callback);
+observer.observe(targetNode, config);
