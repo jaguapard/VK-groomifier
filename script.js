@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VK groomifier
 // @namespace    http://tampermonkey.net/
-// @version      0.3
-// @description  Убирает away.vk.com и возращает "Сообщения" вместо "Мессенджера"
+// @version      0.4
+// @description  "Причёсывает" vk.com
 // @author       groomyjohny
 // @match        https://*.vk.com/*
 // @grant        none
@@ -33,13 +33,13 @@ function callback(mutationList, observer)
 function recursivelyIterate(el)
 {
     if (debug) console.log(el);
-    if (el.nodeName == "A") fixElement(el);
+    if (el.nodeName == "A") checkAndFixLink(el);
     if (el.children)
         for (let i = 0; i < el.children.length; ++i) 
             recursivelyIterate(el.children[i]);
 }
 
-function fixElement(el)
+function checkAndFixLink(el)
 {
     let href = el.href;
     if (href.startsWith(linkBeginning))
@@ -52,10 +52,11 @@ function fixElement(el)
             if (debug) el.style.background = "green";
         }
     }
+    if (href.startsWith("https://vk.com/audios")) el.href += "?section=all"
 }
 
 let links = document.getElementsByTagName("a");
 for (let i = 0; i < links.length; ++i) 
-    fixElement(links[i]); //MutationObserver does not work on initial load. This will handle it, while the new loaded elements will go to MutationObserver
+    checkAndFixLink(links[i]); //MutationObserver does not work on initial load. This will handle it, while the new loaded elements will go to MutationObserver
 const observer = new MutationObserver(callback);
 observer.observe(targetNode, config);
